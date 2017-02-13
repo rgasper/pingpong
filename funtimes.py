@@ -225,32 +225,32 @@ nate['Winner'] = nate.apply (lambda row: decide_winner (row),axis=1)
 sanketh['Winner'] = sanketh.apply (lambda row: decide_winner (row),axis=1)
 sri['Winner'] = sri.apply (lambda row: decide_winner (row),axis=1)
 
-##analyzing nate
-#length_winloss(nate,plot=True)
-#analyze_loops(nate)
-#results_winloss(nate,plot=True)    
-#shots_winloss(nate,plot=True)
-#
-##analyzing sanketh
-#length_winloss(sanketh,plot=True)
-#analyze_loops(sanketh)
-#results_winloss(sanketh,plot=True)
-#shots_winloss(sanketh,plot=True)
-##sanketh's results just against the super good dude
-#wpimatch=sanketh.loc[sanketh['Match']==2]
-#wpimatch.name="Sanketh v WPI #1"
-#length_winloss(wpimatch,plot=True)
-#results_winloss(wpimatch,plot=True)
-#shots_winloss(wpimatch,plot=True)
-##Comparing short poflts (usually service return or a setup)
-#notm2misses=sanketh.loc[(sanketh['Winner']==2)&(sanketh['Length']=='s')&(sanketh['Match']!=2)].shape[0]
-#m2misses=sanketh.loc[(sanketh['Winner']==2)&(sanketh['Length']=='s')&(sanketh['Match']==2)].shape[0]
-#
-##analyzing sri
-#length_winloss(sri,plot=True)
-#analyze_loops(sri)
-#results_winloss(sri,plot=True)
-#shots_winloss(sri,plot=True)
+#analyzing nate
+length_winloss(nate,plot=True)
+analyze_loops(nate)
+results_winloss(nate,plot=True)    
+shots_winloss(nate,plot=True)
+
+#analyzing sanketh
+length_winloss(sanketh,plot=True)
+analyze_loops(sanketh)
+results_winloss(sanketh,plot=True)
+shots_winloss(sanketh,plot=True)
+#sanketh's results just against the super good dude
+wpimatch=sanketh.loc[sanketh['Match']==2]
+wpimatch.name="Sanketh v WPI #1"
+length_winloss(wpimatch,plot=True)
+results_winloss(wpimatch,plot=True)
+shots_winloss(wpimatch,plot=True)
+#Comparing short poflts (usually service return or a setup)
+notm2misses=sanketh.loc[(sanketh['Winner']==2)&(sanketh['Length']=='s')&(sanketh['Match']!=2)].shape[0]
+m2misses=sanketh.loc[(sanketh['Winner']==2)&(sanketh['Length']=='s')&(sanketh['Match']==2)].shape[0]
+
+#analyzing sri
+length_winloss(sri,plot=True)
+analyze_loops(sri)
+results_winloss(sri,plot=True)
+shots_winloss(sri,plot=True)
 
 """
 #Apply sklearn stuff to each player
@@ -296,85 +296,4 @@ Z=Z.reshape(xx.shape)
 plt.contourf(xx,yy,Z,cmap=plt.cm.coolwarm,alpha=0.8)
 plt.scatter(X[:,0],X[:,1],c=Y,cmap=plt.cm.coolwarm)
 plt.show()
-"""
-
-
-def ML_fun(player):
-    '''
-    takes in a ping pong pd data frame
-    converts/cleans the data and then runs a decision tree
-    and scores the prediction outcome
-    '''
-    flts=convert_to_flts(player)
-    X=flts[:,:-1]
-    Y=flts[:,-1]
-    
-    from sklearn import decomposition
-    pca=decomposition.PCA(n_components=2)
-    new_X=pca.fit_transform(X)
-    #colors=np.where(Y==1,'b','r')
-    #plt.scatter(new_x[:,0],new_x[:,1],c=colors,s=20)
-    #plt.show()
-    #plt.scatter(new_X,Y)
-    print("PCA Vectors: ", pca.components_)
-    
-    #from sklearn import cross_validation
-    #x_train, x_test, y_train, y_test = cross_validation.train_test_split(
-    #                                new_X,Y, test_size=0.25,random_state=1)
-    
-    from sklearn import tree
-    dtm=tree.DecisionTreeClassifier(
-                                    max_depth=3,
-                                    min_samples_leaf=5,
-                                    criterion='entropy'
-                                    )
-    dtm.fit(new_X,Y)
-    print("Decision tree score: ", dtm.score(new_X,Y))
-    print("PCA vector Importances: ", dtm.feature_importances_)
-    
-    from sklearn.neighbors import KNeighborsClassifier
-    #knn= KNeighborsClassifier(
-    #                          weights='distance'
-    #                          )
-    #knn.fit(x_train, y_train)
-    #print("KNN score: ", knn.score(x_test,y_test))
-    
-    from matplotlib.colors import ListedColormap
-    #Plotting bit for knn
-    h = .02  # step size in the mesh
-
-    # Create color maps
-    cmap_light = ListedColormap(['#FFAAAA', '#AAFFAA'])#,'#AAAAFF'])
-    cmap_bold = ListedColormap(['#FF0000', '#00FF00'])#, '#0000FF'])
-    weights = 'distance' #leaving out uniform cus distance is always doing better
-    # we create an instance of Neighbours Classifier and fit the data.
-    k=5
-    clf = KNeighborsClassifier(n_neighbors=k, weights=weights)
-    clf.fit(new_X, Y)
-    print("KNN score w/ weights = '%s' and k= %i:  " % (weights, k), clf.score(new_X,Y))
-
-    # Plot the decision boundary. For that, we will assign a color to each
-    # point in the mesh [x_min, x_max]x[y_min, y_max].
-    x_min, x_max = new_X[:, 0].min() - 1, new_X[:, 0].max() + 1
-    y_min, y_max = new_X[:, 1].min() - 1, new_X[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                         np.arange(y_min, y_max, h))
-    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-
-    # Put the result into a color plot
-    Z = Z.reshape(xx.shape)
-    plt.figure()
-    plt.pcolormesh(xx, yy, Z, cmap=cmap_light)
-
-    # Plot also the training points
-    plt.scatter(new_X[:, 0], new_X[:, 1], c=Y, cmap=cmap_bold)
-    plt.xlim(xx.min(), xx.max())
-    plt.ylim(yy.min(), yy.max())
-    plt.title("2-Class classification (k = %i, weights = '%s')"
-              % (k, weights))
-    plt.show()
-    
-    
-    
-    
-    
+"""    
